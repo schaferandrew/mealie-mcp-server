@@ -72,9 +72,30 @@ If you prefer to keep credentials in a `.env` file:
 }
 ```
 
-### Option C: Using npx (After npm publish)
+### Option C: Using npx from a Local Directory
 
-If the package is published to npm:
+If you've cloned the repo but don't want to track the full path to `dist/index.js`, run npx pointing at the local package directory:
+
+```json
+{
+  "mcpServers": {
+    "mealie": {
+      "command": "npx",
+      "args": ["--prefix", "/absolute/path/to/mealie-mcp-server", "mealie-mcp-server"],
+      "env": {
+        "MEALIE_URL": "http://localhost:9000",
+        "MEALIE_API_KEY": "your-mealie-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Or simply reference the built entry point directly (most reliable for local setups — same as Option A).
+
+### Option D: Using npx from npm Registry (After Publishing)
+
+Once the package is published to npm, no local installation is needed at all:
 
 ```json
 {
@@ -90,6 +111,8 @@ If the package is published to npm:
   }
 }
 ```
+
+`-y` skips the install confirmation prompt. npx will download and cache the package on first run, then reuse the cache on subsequent runs.
 
 ### Full Config Example (with other MCP servers)
 
