@@ -56,6 +56,7 @@ Replace:
 - `/absolute/path/to/mealie-mcp-server` with the actual path (e.g., `/Users/alice/projects/mealie-mcp-server`)
 - `http://localhost:9000` with your Mealie URL
 - `your-mealie-api-key-here` with your Mealie API token
+-  if you your agent is having trouble running node, you might need to point to the exact path `which node`, should give you something like `/Users/{INSERT-NAME-HERE}/.nvm/versions/node/v22.16.0bin/node`
 
 ### Option B: Using a .env File
 
