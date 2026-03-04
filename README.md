@@ -24,13 +24,16 @@ Once connected, you can ask Claude things like:
 
 ## Installation
 
-Clone the repo and build:
+No installation required — run directly with `npx`:
 
 ```bash
-git clone https://github.com/your-username/mealie-mcp-server.git
-cd mealie-mcp-server
-npm install
-npm run build
+npx @schaferandrew/mealie-mcp-server
+```
+
+Or install globally if you prefer:
+
+```bash
+npm install -g @schaferandrew/mealie-mcp-server
 ```
 
 ## Claude Desktop Setup
@@ -44,8 +47,8 @@ Add the server to your Claude Desktop config file:
 {
   "mcpServers": {
     "mealie": {
-      "command": "/path/to/node",
-      "args": ["/path/to/mealie-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@schaferandrew/mealie-mcp-server"],
       "env": {
         "MEALIE_URL": "http://your-mealie-instance:9000",
         "MEALIE_API_KEY": "your-api-key-here"
@@ -55,17 +58,12 @@ Add the server to your Claude Desktop config file:
 }
 ```
 
-To find your Node path:
-```bash
-which node
-```
-
-Then restart Claude Desktop. You should see the Mealie tools available in Claude.
+Restart Claude Desktop — you should see the Mealie tools available in Claude.
 
 ## Claude Code Setup
 
 ```bash
-claude mcp add mealie /path/to/node /path/to/mealie-mcp-server/dist/index.js \
+claude mcp add mealie -- npx -y @schaferandrew/mealie-mcp-server \
   -e MEALIE_URL=http://your-mealie-instance:9000 \
   -e MEALIE_API_KEY=your-api-key-here
 ```
@@ -82,56 +80,54 @@ Add `--scope global` to make it available in all projects.
 | `add_recipe_from_url` | Import a recipe by scraping a URL |
 | `search_by_ingredient` | Find recipes containing a specific ingredient |
 
-## Project Structure
+## Configuration
 
-```
-mealie-mcp-server/
-├── src/
-│   ├── index.ts           # MCP server entry point
-│   ├── mealie-client.ts   # Mealie REST API wrapper
-│   ├── tools.ts           # Tool definitions, schemas, and handlers
-│   ├── config.ts          # Environment variable management
-│   ├── types.ts           # TypeScript interfaces
-│   └── test-connection.ts # Connection verification script
-├── .env.example
-├── package.json
-└── tsconfig.json
+| Environment Variable | Required | Description |
+|---|---|---|
+| `MEALIE_URL` | Yes | Base URL of your Mealie instance (e.g. `http://localhost:9000`) |
+| `MEALIE_API_KEY` | Yes | API token generated in your Mealie profile |
+
+## Security Notes
+
+- API keys are never logged — credentials are redacted from all error messages
+- Never hardcode credentials; use environment variables
+- `.env` is gitignored — `.env.example` is safe to commit
+
+## Development
+
+Clone the repo and install dependencies:
+
+```bash
+git clone https://github.com/schaferandrew/mealie-mcp-server.git
+cd mealie-mcp-server
+npm install
+npm run build
 ```
 
-## Testing the Connection
+Test your Mealie connection:
 
 ```bash
 MEALIE_URL=http://your-instance MEALIE_API_KEY=your-key npm run test-connection
 ```
 
-## Security Notes
+### Releasing a New Version
 
-- API keys are never logged — credentials are redacted from all error messages
-- Never hardcode credentials; use environment variables or a `.env` file
-- `.env` is gitignored — `.env.example` is safe to commit
+Releases are published to npm automatically when a GitHub Release is published.
 
-## Releasing a New Version
-
-Releases are published to npm automatically when a version tag is pushed to GitHub.
-
-### Steps
-
-1. On a new branch, bump the version in `package.json`:
+1. Bump the version in `package.json`:
    ```bash
    npm version patch --no-git-tag-version   # 0.1.0 → 0.1.1  (bug fixes)
    npm version minor --no-git-tag-version   # 0.1.0 → 0.2.0  (new features)
    npm version major --no-git-tag-version   # 0.1.0 → 1.0.0  (breaking changes)
    ```
 
-2. Commit, open a PR, and merge it into `main`.
+2. Commit, open a PR, and merge into `main`.
 
-3. On GitHub, go to **Releases → Draft a new release**:
-   - Set the tag to match the version (e.g. `v0.1.1`)
-   - Click **Publish release**
+3. On GitHub, go to **Releases → Draft a new release**, set the tag (e.g. `v0.1.1`), and click **Publish release**.
 
-GitHub Actions will publish to npm automatically when the release is published.
+GitHub Actions will publish to npm automatically.
 
-> **Note:** Make sure `NPM_TOKEN` is set in your GitHub repo under **Settings → Secrets and variables → Actions**.
+> **Note:** `NPM_TOKEN` must be set in your repo under **Settings → Secrets and variables → Actions**.
 
 ## License
 
