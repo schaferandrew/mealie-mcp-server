@@ -53,73 +53,18 @@ export const ListRecipesSchema = z.object({
     .describe("Number of recipes to skip for pagination (default: 0)"),
 });
 
-export const AddRecipeSchema = z.object({
-  name: z.string().min(1).describe("Name of the recipe"),
-  ingredients: z
-    .array(z.string().min(1))
-    .min(1)
-    .describe(
-      "List of ingredients as strings (e.g. ['2 cups flour', '1 tsp salt'])"
-    ),
-  instructions: z
-    .string()
-    .min(1)
-    .describe(
-      "Step-by-step cooking instructions. Separate steps with newlines."
-    ),
-  description: z
-    .string()
+export const AddRecipeFromUrlSchema = z.object({
+  url: z.string().url().describe("URL of the recipe page to scrape and import"),
+  includeTags: z
+    .boolean()
     .optional()
-    .describe("Short description of the recipe"),
-  tags: z
-    .array(z.string())
+    .default(false)
+    .describe("Whether to import tags from the source website (default: false)"),
+  includeCategories: z
+    .boolean()
     .optional()
-    .describe("List of tag names to assign to the recipe"),
-  notes: z
-    .string()
-    .optional()
-    .describe("Additional notes or tips for the recipe"),
-  prepTime: z
-    .string()
-    .optional()
-    .describe("Preparation time (e.g. '15 minutes', 'PT15M')"),
-  cookTime: z
-    .string()
-    .optional()
-    .describe("Cooking time (e.g. '30 minutes', 'PT30M')"),
-  totalTime: z
-    .string()
-    .optional()
-    .describe("Total time including prep and cook (e.g. '45 minutes')"),
-  recipeYield: z
-    .string()
-    .optional()
-    .describe("Number of servings (e.g. '4 servings', '8 cookies')"),
-});
-
-export const UpdateRecipeSchema = z.object({
-  recipe_id: z
-    .string()
-    .min(1)
-    .describe("Recipe ID (UUID) or slug to update"),
-  updates: z
-    .object({
-      name: z.string().optional().describe("New recipe name"),
-      description: z.string().optional().describe("New description"),
-      recipeYield: z.string().optional().describe("New serving size"),
-      prepTime: z.string().optional().describe("New prep time"),
-      cookTime: z.string().optional().describe("New cook time"),
-      totalTime: z.string().optional().describe("New total time"),
-      tags: z
-        .array(z.string())
-        .optional()
-        .describe("Replacement tag list (replaces all existing tags)"),
-      notes: z
-        .string()
-        .optional()
-        .describe("New notes text (updates or creates a 'Notes' section)"),
-    })
-    .describe("Fields to update on the recipe"),
+    .default(false)
+    .describe("Whether to import categories from the source website (default: false)"),
 });
 
 export const SearchByIngredientSchema = z.object({
@@ -222,94 +167,30 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "add_recipe",
+    name: "add_recipe_from_url",
     description:
-      "Create a new recipe in Mealie with name, ingredients, instructions, and optional metadata. " +
-      "Returns the created recipe with its assigned ID and slug.",
+      "Import a recipe into Mealie by scraping a URL. Mealie will automatically extract " +
+      "the recipe name, ingredients, instructions, and metadata from the page. " +
+      "Works best with sites that use structured recipe data (most major recipe sites).",
     inputSchema: {
       type: "object",
       properties: {
-        name: {
+        url: {
           type: "string",
-          description: "Name of the recipe",
+          description: "URL of the recipe page to scrape and import",
         },
-        ingredients: {
-          type: "array",
-          items: { type: "string" },
-          description: "List of ingredients as strings (e.g. ['2 cups flour', '1 tsp salt'])",
+        includeTags: {
+          type: "boolean",
+          description: "Whether to import tags from the source website (default: false)",
+          default: false,
         },
-        instructions: {
-          type: "string",
-          description: "Step-by-step cooking instructions. Separate steps with newlines.",
-        },
-        description: {
-          type: "string",
-          description: "Short description of the recipe",
-        },
-        tags: {
-          type: "array",
-          items: { type: "string" },
-          description: "List of tag names to assign to the recipe",
-        },
-        notes: {
-          type: "string",
-          description: "Additional notes or tips for the recipe",
-        },
-        prepTime: {
-          type: "string",
-          description: "Preparation time (e.g. '15 minutes')",
-        },
-        cookTime: {
-          type: "string",
-          description: "Cooking time (e.g. '30 minutes')",
-        },
-        totalTime: {
-          type: "string",
-          description: "Total time including prep and cook (e.g. '45 minutes')",
-        },
-        recipeYield: {
-          type: "string",
-          description: "Number of servings (e.g. '4 servings', '8 cookies')",
+        includeCategories: {
+          type: "boolean",
+          description: "Whether to import categories from the source website (default: false)",
+          default: false,
         },
       },
-      required: ["name", "ingredients", "instructions"],
-    },
-  },
-  {
-    name: "update_recipe",
-    description:
-      "Update fields on an existing recipe. Only the fields provided in 'updates' will be changed. " +
-      "You can update the name, description, times, tags, and notes.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        recipe_id: {
-          type: "string",
-          description: "Recipe ID (UUID) or slug to update",
-        },
-        updates: {
-          type: "object",
-          description: "Fields to update on the recipe",
-          properties: {
-            name: { type: "string", description: "New recipe name" },
-            description: { type: "string", description: "New description" },
-            recipeYield: { type: "string", description: "New serving size" },
-            prepTime: { type: "string", description: "New prep time" },
-            cookTime: { type: "string", description: "New cook time" },
-            totalTime: { type: "string", description: "New total time" },
-            tags: {
-              type: "array",
-              items: { type: "string" },
-              description: "Replacement tag list (replaces all existing tags)",
-            },
-            notes: {
-              type: "string",
-              description: "New notes text (updates or creates a 'Notes' section)",
-            },
-          },
-        },
-      },
-      required: ["recipe_id", "updates"],
+      required: ["url"],
     },
   },
   {
@@ -368,16 +249,10 @@ export async function handleTool(
       return formatRecipeList(result.items, header);
     }
 
-    case "add_recipe": {
-      const input = AddRecipeSchema.parse(args);
-      const recipe = await client.createRecipe(input);
-      return `Recipe created successfully!\n\n${formatFullRecipe(recipe)}`;
-    }
-
-    case "update_recipe": {
-      const input = UpdateRecipeSchema.parse(args);
-      const recipe = await client.updateRecipe(input);
-      return `Recipe updated successfully!\n\n${formatFullRecipe(recipe)}`;
+    case "add_recipe_from_url": {
+      const input = AddRecipeFromUrlSchema.parse(args);
+      const recipe = await client.createRecipeFromUrl(input.url, input.includeTags, input.includeCategories);
+      return `Recipe imported successfully!\n\n${formatFullRecipe(recipe)}`;
     }
 
     case "search_by_ingredient": {

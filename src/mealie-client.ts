@@ -2,12 +2,8 @@ import axios, { AxiosInstance, AxiosError } from "axios";
 import {
   Recipe,
   RecipeSummary,
-  RecipeIngredient,
-  RecipeInstruction,
   RecipeTag,
   PaginatedResponse,
-  AddRecipeInput,
-  UpdateRecipeInput,
 } from "./types.js";
 
 // ─── Mealie API Client ─────────────────────────────────────────────────────────
@@ -129,110 +125,27 @@ export class MealieClient {
     }
   }
 
-  // ─── Create Recipe ────────────────────────────────────────────────────────────
+  // ─── Create Recipe from URL ───────────────────────────────────────────────────
 
-  async createRecipe(input: AddRecipeInput): Promise<Recipe> {
+  async createRecipeFromUrl(
+    url: string,
+    includeTags = false,
+    includeCategories = false
+  ): Promise<Recipe> {
     try {
-      // Step 1: Create basic recipe to get a slug
-      const createResponse = await this.http.post<string>("/recipes", {
-        name: input.name,
+      const response = await this.http.post<string>("/recipes/create/url", {
+        url,
+        includeTags,
+        includeCategories,
       });
 
-      // The API returns the slug as a plain string
-      const slug = typeof createResponse.data === "string"
-        ? createResponse.data.replace(/^"|"$/g, "") // strip surrounding quotes if present
-        : createResponse.data;
+      const slug = typeof response.data === "string"
+        ? response.data.replace(/^"|"$/g, "")
+        : response.data;
 
-      // Step 2: Build full recipe payload
-      const ingredients: RecipeIngredient[] = input.ingredients.map((text) => ({
-        note: text,
-        disableAmount: true,
-        display: text,
-        originalText: text,
-        isFood: false,
-        quantity: null,
-        unit: null,
-        food: null,
-        title: null,
-      }));
-
-      const instructions: RecipeInstruction[] = input.instructions
-        .split(/\n+/)
-        .map((step) => step.trim())
-        .filter((step) => step.length > 0)
-        .map((step) => ({ text: step }));
-
-      const tags: RecipeTag[] = (input.tags ?? []).map((name) => ({ name }));
-
-      const notes = input.notes
-        ? [{ title: "Notes", text: input.notes }]
-        : [];
-
-      const updatePayload: Partial<Recipe> = {
-        name: input.name,
-        description: input.description ?? "",
-        recipeIngredient: ingredients,
-        recipeInstructions: instructions,
-        tags,
-        notes,
-        prepTime: input.prepTime ?? null,
-        cookTime: input.cookTime ?? null,
-        totalTime: input.totalTime ?? null,
-        recipeYield: input.recipeYield ?? null,
-      };
-
-      // Step 3: Update the recipe with full details
-      await this.http.put(`/recipes/${slug}`, updatePayload);
-
-      // Step 4: Return the full recipe
       return await this.getRecipe(slug);
     } catch (error) {
-      throw this.wrapError("create recipe", error);
-    }
-  }
-
-  // ─── Update Recipe ────────────────────────────────────────────────────────────
-
-  async updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
-    try {
-      // Fetch current recipe first so we can merge updates
-      const current = await this.getRecipe(input.recipe_id);
-      const { updates } = input;
-
-      const payload: Partial<Recipe> = {
-        ...current,
-        ...(updates.name !== undefined && { name: updates.name }),
-        ...(updates.description !== undefined && { description: updates.description }),
-        ...(updates.recipeYield !== undefined && { recipeYield: updates.recipeYield }),
-        ...(updates.prepTime !== undefined && { prepTime: updates.prepTime }),
-        ...(updates.cookTime !== undefined && { cookTime: updates.cookTime }),
-        ...(updates.totalTime !== undefined && { totalTime: updates.totalTime }),
-        ...(updates.recipeIngredient !== undefined && { recipeIngredient: updates.recipeIngredient }),
-        ...(updates.recipeInstructions !== undefined && { recipeInstructions: updates.recipeInstructions }),
-      };
-
-      // Handle tags update
-      if (updates.tags !== undefined) {
-        payload.tags = updates.tags.map((name) => ({ name }));
-      }
-
-      // Handle notes update
-      if (updates.notes !== undefined) {
-        const existingNotes = current.notes ?? [];
-        const generalNote = existingNotes.find((n) => n.title === "Notes");
-        if (generalNote) {
-          payload.notes = existingNotes.map((n) =>
-            n.title === "Notes" ? { ...n, text: updates.notes! } : n
-          );
-        } else {
-          payload.notes = [...existingNotes, { title: "Notes", text: updates.notes }];
-        }
-      }
-
-      await this.http.put(`/recipes/${input.recipe_id}`, payload);
-      return await this.getRecipe(input.recipe_id);
-    } catch (error) {
-      throw this.wrapError(`update recipe '${input.recipe_id}'`, error);
+      throw this.wrapError(`create recipe from URL '${url}'`, error);
     }
   }
 
@@ -272,6 +185,15 @@ export class MealieClient {
     } catch (error) {
       throw this.wrapError(`search by ingredient '${ingredient}'`, error);
     }
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+  private toTagSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
   }
 
   // ─── Tags ─────────────────────────────────────────────────────────────────────

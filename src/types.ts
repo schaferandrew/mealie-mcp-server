@@ -174,35 +174,6 @@ export interface ListRecipesInput {
   offset?: number;
 }
 
-export interface AddRecipeInput {
-  name: string;
-  ingredients: string[];
-  instructions: string;
-  description?: string;
-  tags?: string[];
-  notes?: string;
-  prepTime?: string;
-  cookTime?: string;
-  totalTime?: string;
-  recipeYield?: string;
-}
-
-export interface UpdateRecipeInput {
-  recipe_id: string;
-  updates: {
-    name?: string;
-    description?: string;
-    recipeYield?: string;
-    prepTime?: string;
-    cookTime?: string;
-    totalTime?: string;
-    tags?: string[];
-    notes?: string;
-    recipeIngredient?: RecipeIngredient[];
-    recipeInstructions?: RecipeInstruction[];
-  };
-}
-
 export interface SearchByIngredientInput {
   ingredient: string;
   limit?: number;
