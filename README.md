@@ -74,11 +74,11 @@ Add `--scope global` to make it available in all projects.
 
 | Tool | Description |
 |---|---|
-| `search_recipes` | Search recipes by name or keyword |
-| `get_recipe` | Get full recipe details including ingredients & instructions |
-| `list_recipes` | List all recipes with optional tag/category filters |
-| `add_recipe_from_url` | Import a recipe by scraping a URL |
-| `search_by_ingredient` | Find recipes containing a specific ingredient |
+| `search_recipes` | Search recipes by name or keyword.<br>Example: `search_recipes pasta` |
+| `get_recipe` | Get full recipe details including ingredients & instructions.<br>Example: `get_recipe "Spaghetti Carbonara"` |
+| `list_recipes` | List all recipes, optionally filtered by tag or category.<br>Example: `list_recipes tag=vegetarian` |
+| `add_recipe_from_url` | Import a recipe by scraping a URL.<br>Example: `add_recipe_from_url https://example.com/recipe` |
+| `search_by_ingredient` | Find recipes containing a specific ingredient.<br>Example: `search_by_ingredient chicken` |
 
 ## Configuration
 
