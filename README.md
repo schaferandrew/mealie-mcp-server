@@ -116,24 +116,20 @@ Releases are published to npm automatically when a version tag is pushed to GitH
 
 ### Steps
 
-1. Make sure all changes are merged to `main` and you're up to date:
+1. On a new branch, bump the version in `package.json`:
    ```bash
-   git checkout main && git pull origin main
+   npm version patch --no-git-tag-version   # 0.1.0 → 0.1.1  (bug fixes)
+   npm version minor --no-git-tag-version   # 0.1.0 → 0.2.0  (new features)
+   npm version major --no-git-tag-version   # 0.1.0 → 1.0.0  (breaking changes)
    ```
 
-2. Bump the version:
-   ```bash
-   npm version patch   # 0.1.0 → 0.1.1  (bug fixes)
-   npm version minor   # 0.1.0 → 0.2.0  (new features)
-   npm version major   # 0.1.0 → 1.0.0  (breaking changes)
-   ```
+2. Commit, open a PR, and merge it into `main`.
 
-3. Push the commit and tag:
-   ```bash
-   git push origin main --follow-tags
-   ```
+3. On GitHub, go to **Releases → Draft a new release**:
+   - Set the tag to match the version (e.g. `v0.1.1`)
+   - Click **Publish release**
 
-GitHub Actions will detect the new `v*` tag and publish to npm automatically.
+GitHub Actions will publish to npm automatically when the release is published.
 
 > **Note:** Make sure `NPM_TOKEN` is set in your GitHub repo under **Settings → Secrets and variables → Actions**.
 

@@ -1,5 +1,5 @@
 {
-  "name": "mealie-mcp-server",
+  "name": "@schaferandrew/mealie-mcp-server",
   "version": "0.1.1",
   "description": "MCP server for integrating Mealie recipe manager with Claude and Vivian",
   "main": "dist/index.js",
@@ -40,5 +40,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
