@@ -110,6 +110,33 @@ MEALIE_URL=http://your-instance MEALIE_API_KEY=your-key npm run test-connection
 - Never hardcode credentials; use environment variables or a `.env` file
 - `.env` is gitignored — `.env.example` is safe to commit
 
+## Releasing a New Version
+
+Releases are published to npm automatically when a version tag is pushed to GitHub.
+
+### Steps
+
+1. Make sure all changes are merged to `main` and you're up to date:
+   ```bash
+   git checkout main && git pull origin main
+   ```
+
+2. Bump the version:
+   ```bash
+   npm version patch   # 0.1.0 → 0.1.1  (bug fixes)
+   npm version minor   # 0.1.0 → 0.2.0  (new features)
+   npm version major   # 0.1.0 → 1.0.0  (breaking changes)
+   ```
+
+3. Push the commit and tag:
+   ```bash
+   git push origin main --follow-tags
+   ```
+
+GitHub Actions will detect the new `v*` tag and publish to npm automatically.
+
+> **Note:** Make sure `NPM_TOKEN` is set in your GitHub repo under **Settings → Secrets and variables → Actions**.
+
 ## License
 
 MIT
