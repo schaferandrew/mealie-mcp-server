@@ -1,6 +1,6 @@
 {
   "name": "mealie-mcp-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for integrating Mealie recipe manager with Claude and Vivian",
   "main": "dist/index.js",
   "bin": {
