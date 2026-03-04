@@ -114,20 +114,39 @@ MEALIE_URL=http://your-instance MEALIE_API_KEY=your-key npm run test-connection
 
 Releases are published to npm automatically when a GitHub Release is published.
 
-1. Bump the version in `package.json`:
-   ```bash
-   npm version patch --no-git-tag-version   # 0.1.0 → 0.1.1  (bug fixes)
-   npm version minor --no-git-tag-version   # 0.1.0 → 0.2.0  (new features)
-   npm version major --no-git-tag-version   # 0.1.0 → 1.0.0  (breaking changes)
-   ```
+**Step 1 — bump the version and open a PR:**
 
-2. Commit, open a PR, and merge into `main`.
+```bash
+# Pick one based on the nature of your changes:
+npm version patch --no-git-tag-version   # 0.1.0 → 0.1.1  (bug fixes)
+npm version minor --no-git-tag-version   # 0.1.0 → 0.2.0  (new features)
+npm version major --no-git-tag-version   # 0.1.0 → 1.0.0  (breaking changes)
 
-3. On GitHub, go to **Releases → Draft a new release**, set the tag (e.g. `v0.1.1`), and click **Publish release**.
+VERSION=$(node -p "require('./package.json').version")
+
+git checkout -b release/v$VERSION
+git add package.json package-lock.json
+git commit -m "chore: bump version to $VERSION"
+git push -u origin release/v$VERSION
+gh pr create --title "chore: release v$VERSION" --body "Version bump to v$VERSION." --base main
+```
+
+**Step 2 — after the PR is merged, create the GitHub Release:**
+
+```bash
+# Make sure you're on main with the latest changes
+git checkout main && git pull origin main
+
+VERSION=$(node -p "require('./package.json').version")
+
+gh release create "v$VERSION" \
+  --title "v$VERSION" \
+  --generate-notes
+```
 
 GitHub Actions will publish to npm automatically.
 
-> **Note:** `NPM_TOKEN` must be set in your repo under **Settings → Secrets and variables → Actions**.
+> **Note:** `NPM_TOKEN` must be set in your repo under **Settings → Secrets and variables → Actions**. Requires the [GitHub CLI](https://cli.github.com) (`gh`).
 
 ## License
 
