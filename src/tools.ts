@@ -109,7 +109,9 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           description: "Optional list of tag names to filter by",
         },
         limit: {
-          type: "number",
+          type: "integer",
+          minimum: 1,
+          maximum: 100,
           description: "Maximum number of results to return (default: 20, max: 100)",
           default: 20,
         },
