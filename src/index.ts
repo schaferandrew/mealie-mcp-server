@@ -15,9 +15,9 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from "@modelcontextprotocol/sdk/types.js";
-import { config } from "./config.js";
-import { MealieClient } from "./mealie-client.js";
-import { TOOL_DEFINITIONS, handleTool } from "./tools.js";
+import { config } from "./config";
+import { MealieClient } from "./mealie-client";
+import { TOOL_DEFINITIONS, handleTool } from "./tools";
 
 // ─── Server Setup ──────────────────────────────────────────────────────────────
 
