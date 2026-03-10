@@ -5,10 +5,17 @@
  *
  * Exposes Mealie recipe management capabilities as MCP tools for use
  * with Claude Desktop, Vivian, and other MCP-compatible AI assistants.
+ *
+ * Transport is selected via the TRANSPORT env var:
+ *   TRANSPORT=stdio  (default) — communicate over stdin/stdout
+ *   TRANSPORT=http             — HTTP server with Streamable HTTP/SSE transport
  */
 
+import http from "node:http";
+import { randomUUID } from "node:crypto";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -103,23 +110,79 @@ async function main(): Promise<void> {
     log("The server will start anyway — tools will report errors if Mealie is unreachable.");
   }
 
+  if (config.transport === "http") {
+    await startHttpTransport();
+  } else {
+    await startStdioTransport();
+  }
+}
+
+// ─── stdio transport (default) ─────────────────────────────────────────────────
+
+async function startStdioTransport(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   log("Mealie MCP Server running on stdio — ready for connections.");
 }
 
-// ─── Graceful Shutdown ─────────────────────────────────────────────────────────
+// ─── HTTP/SSE transport ────────────────────────────────────────────────────────
 
+async function startHttpTransport(): Promise<void> {
+  // Stateful mode: the server assigns a session ID on the first request.
+  // Each MCP client gets its own session tracked by Mcp-Session-Id header.
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => randomUUID(),
+  });
+
+  await server.connect(transport);
+
+  const httpServer = http.createServer((req, res) => {
+    transport.handleRequest(req, res);
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    httpServer.on("error", reject);
+    httpServer.listen(config.port, () => {
+      log(`Mealie MCP Server running in HTTP mode on port ${config.port}`);
+      log(`  POST /  — send JSON-RPC messages`);
+      log(`  GET  /  — open SSE stream`);
+      resolve();
+    });
+  });
+
+  process.on("SIGINT", async () => {
+    log("Received SIGINT, shutting down gracefully...");
+    httpServer.close();
+    await server.close();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", async () => {
+    log("Received SIGTERM, shutting down gracefully...");
+    httpServer.close();
+    await server.close();
+    process.exit(0);
+  });
+}
+
+// ─── Graceful Shutdown (stdio) ─────────────────────────────────────────────────
+
+// HTTP mode registers its own shutdown handlers above (they also close httpServer).
+// These fire only when in stdio mode (or as a fallback).
 process.on("SIGINT", async () => {
-  log("Received SIGINT, shutting down gracefully...");
-  await server.close();
-  process.exit(0);
+  if (config.transport !== "http") {
+    log("Received SIGINT, shutting down gracefully...");
+    await server.close();
+    process.exit(0);
+  }
 });
 
 process.on("SIGTERM", async () => {
-  log("Received SIGTERM, shutting down gracefully...");
-  await server.close();
-  process.exit(0);
+  if (config.transport !== "http") {
+    log("Received SIGTERM, shutting down gracefully...");
+    await server.close();
+    process.exit(0);
+  }
 });
 
 // ─── Logging ───────────────────────────────────────────────────────────────────
