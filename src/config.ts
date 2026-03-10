@@ -23,7 +23,13 @@ function getConfig(): ServerConfig {
     throw new Error(`MCP_PORT must be a valid port number (1-65535), got: ${process.env["MCP_PORT"]}`);
   }
 
-  return { mealieUrl, mealieApiKey, port };
+  const rawTransport = (process.env["TRANSPORT"] ?? "stdio").toLowerCase();
+  if (rawTransport !== "stdio" && rawTransport !== "http") {
+    throw new Error(`TRANSPORT must be 'stdio' or 'http', got: '${process.env["TRANSPORT"]}'`);
+  }
+  const transport = rawTransport as "stdio" | "http";
+
+  return { mealieUrl, mealieApiKey, port, transport };
 }
 
 export const config = getConfig();

@@ -185,4 +185,5 @@ export interface ServerConfig {
   mealieUrl: string;
   mealieApiKey: string;
   port: number;
+  transport: "stdio" | "http";
 }
